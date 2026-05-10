@@ -1,0 +1,75 @@
+services:
+
+  # ── Backend: FastAPI ──────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    container_name: hfa-backend
+    env_file: config/.env
+    environment:
+      # Docker-specific overrides (take precedence over .env values)
+      # OAuth callback goes through Nginx → backend (user's browser reaches port 3000)
+      GOOGLE_REDIRECT_URI: "http://localhost:3000/api/auth/callback"
+      FRONTEND_URL: "http://localhost:3000"
+      # Absolute path for SQLite inside the container
+      DATABASE_URL: "sqlite:////app/data/health.db"
+      PDF_STORAGE_PATH: "/app/data/pdfs"
+      FAISS_INDEX_PATH: "/app/data/faiss_index"
+      DRUG_KNOWLEDGE_PATH: "/app/data/drug_knowledge"
+      CORS_ORIGINS: '["http://localhost:3000","http://127.0.0.1:3000"]'
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data          # persist SQLite DB, uploaded PDFs, FAISS indexes
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - hfa-network
+
+  # ── Frontend: React + Nginx ───────────────────────────────
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+    container_name: hfa-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - hfa-network
+
+  # ── Redis: Session / Rate Limiting ────────────────────────
+  redis:
+    image: redis:7.2-alpine
+    container_name: hfa-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - hfa-network
+
+networks:
+  hfa-network:
+    driver: bridge
+
+volumes:
+  redis-data:

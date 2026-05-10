@@ -1,0 +1,27 @@
+FROM python:3.11-slim-bookworm
+
+# System dependencies for PyMuPDF
+RUN apt-get update && apt-get install -y \
+    build-essential libmupdf-dev curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Install Python dependencies (cached layer — only re-runs when requirements change)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application source
+COPY backend/ ./backend/
+COPY config/ ./config/
+
+# Bake reference knowledge base into the image; user data dirs are volume-mounted
+RUN mkdir -p data/pdfs data/faiss_index data/drug_knowledge
+COPY data/drug_knowledge/ ./data/drug_knowledge/
+
+EXPOSE 8000
+
+CMD ["uvicorn", "backend.app:app", \
+     "--host", "0.0.0.0", \
+     "--port", "8000", \
+     "--log-level", "info"]

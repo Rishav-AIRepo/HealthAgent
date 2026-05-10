@@ -1,0 +1,39 @@
+# Git
+.git
+.gitignore
+
+# Python artifacts
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.egg-info
+.eggs
+dist
+build
+.pytest_cache
+.mypy_cache
+.ruff_cache
+
+# Virtual environments
+.venv
+venv
+env
+
+# Frontend dev artifacts (built in Docker, not needed in build context)
+frontend/node_modules
+frontend/.vite
+
+# User data (volume-mounted at runtime — not baked into image)
+data/pdfs
+data/faiss_index
+data/health.db
+
+# Secrets — never bake credentials into image
+# (drug_knowledge PDFs ARE intentionally copied)
+config/.env
+
+# Misc
+*.log
+.DS_Store
+Thumbs.db

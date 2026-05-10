@@ -1,0 +1,88 @@
+services:
+  - type: web
+    name: hfa-backend
+    runtime: docker
+    dockerfilePath: ./docker/Dockerfile.backend
+    dockerContext: .
+    plan: standard
+    region: oregon
+    healthCheckPath: /health
+    disk:
+      name: hfa-app-data
+      mountPath: /app/data
+      sizeGB: 10
+    envVars:
+      - key: AZURE_OPENAI_API_KEY
+        sync: false
+      - key: AZURE_OPENAI_ENDPOINT
+        sync: false
+      - key: AZURE_OPENAI_API_VERSION
+        value: "2024-12-01-preview"
+      - key: AZURE_OPENAI_DEPLOYMENT_NAME
+        value: gpt-4o
+      - key: AZURE_OPENAI_EMBEDDING_DEPLOYMENT
+        value: text-embedding-3-large
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_SECRET_KEY
+        sync: false
+      - key: DATABASE_URL
+        value: sqlite:////app/data/health.db
+      - key: PDF_STORAGE_PATH
+        value: /app/data/pdfs
+      - key: FAISS_INDEX_PATH
+        value: /app/data/faiss_index
+      - key: DRUG_KNOWLEDGE_PATH
+        value: /app/data/drug_knowledge
+      - key: EMBEDDING_CHUNK_SIZE
+        value: "500"
+      - key: EMBEDDING_CHUNK_OVERLAP
+        value: "50"
+      - key: FAISS_TOP_K
+        value: "5"
+      - key: CORS_ORIGINS
+        value: '["https://hfa-frontend.onrender.com"]'
+      - key: FRONTEND_URL
+        value: https://hfa-frontend.onrender.com
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REDIRECT_URI
+        value: https://hfa-backend.onrender.com/auth/callback
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_PRICE_STANDARD
+        value: price_1TSsC21gWPbjty2ouk8WD2y2
+      - key: STRIPE_PRICE_PREMIUM
+        value: price_1TSsCS1gWPbjty2oojOia5k9
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: hfa-redis
+          property: connectionString
+
+  - type: web
+    name: hfa-frontend
+    runtime: static
+    buildCommand: cd frontend && npm ci && npm run build
+    staticPublishPath: ./frontend/dist
+    region: oregon
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_BASE_URL
+        sync: false
+
+databases:
+  - name: hfa-redis
+    type: redis
+    plan: free
+    region: oregon
+    maxmemoryPolicy: noeviction
