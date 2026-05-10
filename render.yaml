@@ -71,7 +71,6 @@ services:
     runtime: static
     buildCommand: cd frontend && npm ci && npm run build
     staticPublishPath: ./frontend/dist
-    region: oregon
     routes:
       - type: rewrite
         source: /*
@@ -85,3 +84,4 @@ services:
     plan: free
     region: oregon
     maxmemoryPolicy: noeviction
+    ipAllowList: []
