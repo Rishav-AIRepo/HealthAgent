@@ -1,8 +1,8 @@
 FROM python:3.11-slim-bookworm
 
-# System dependencies for PyMuPDF
+# System dependencies (PyMuPDF >= 1.22 bundles its own MuPDF — no libmupdf-dev needed)
 RUN apt-get update && apt-get install -y \
-    build-essential libmupdf-dev curl \
+    build-essential curl \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
