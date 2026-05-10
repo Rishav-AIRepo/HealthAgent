@@ -2,7 +2,8 @@ import { Activity } from 'lucide-react'
 
 export default function LoginPage() {
   const handleLogin = () => {
-    window.location.href = '/api/auth/login'
+    const base = import.meta.env.VITE_API_BASE_URL || '/api'
+    window.location.href = `${base}/auth/login`
   }
 
   return (
