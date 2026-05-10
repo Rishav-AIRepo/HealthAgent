@@ -80,9 +80,8 @@ services:
       - key: VITE_API_BASE_URL
         sync: false
 
-databases:
-  - name: hfa-redis
-    type: redis
+  - type: redis
+    name: hfa-redis
     plan: free
     region: oregon
     maxmemoryPolicy: noeviction
