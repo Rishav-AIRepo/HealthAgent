@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.sessions import SessionMiddleware
 from contextlib import asynccontextmanager
 import structlog
 
@@ -28,9 +27,6 @@ app = FastAPI(
     version="2.0.0",
     lifespan=lifespan,
 )
-
-# SessionMiddleware must be added before CORS (outermost layer)
-app.add_middleware(SessionMiddleware, secret_key=settings.app_secret_key)
 
 app.add_middleware(
     CORSMiddleware,
